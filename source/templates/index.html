@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Meu App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <script src="https://unpkg.com/htmx.org@1.7.0"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.5"></script>
+</head>
+<body>
+<div class="container">
+    <table class="table">
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Idade</th>
+            <th>Ação</th>
+        </tr>
+
+        {% for aluno in dados %}
+            <tr id="aluno_{{ aluno.id }}">
+                <td>{{ aluno.id }}</td>
+                <td>{{ aluno.nome }}</td>
+                <td class="has-text-centered">{{ aluno.idade }}</td>
+                <td>
+                    <button class="button is-small is-danger"
+                            hx-delete="/delete?aluno_id={{ aluno.id }}"
+                            _="on click remove #aluno_{{ aluno.id }}"
+                    >
+                        Excluir
+                    </button>
+
+                    <button class="button is-small is-info"
+                            hx-get="/details?aluno_id={{ aluno.id }}"
+                            hx-target="#aluno_details"
+                    >
+                        Detalhes
+                    </button>
+
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <div>
+        <h1 class="title">Dtalhes do Aluno</h1>
+
+        <div id="aluno_details">
+            ...
+        </div>
+
+    </div>
+
+    <progress class="progress is-small is-primary" value="60" max="100">15%</progress>
+    <progress class="progress is-danger" value="60" max="100">30%</progress>
+    <progress class="progress is-medium is-dark" max="100">45%</progress>
+    <progress class="progress is-large is-info" max="100">60%</progress>
+
+</div>
+</body>
+</html>
