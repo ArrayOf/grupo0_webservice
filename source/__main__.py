@@ -1,10 +1,12 @@
 from http import HTTPStatus
 from os.path import join, dirname, realpath
+from json import loads
 
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
+from redis.asyncio import Redis
 from uvicorn import run
 
 app = FastAPI()
@@ -12,17 +14,31 @@ app = FastAPI()
 dir_templates = join(dirname(realpath(__file__)), 'templates')
 TEMPLATES = Jinja2Templates(directory=dir_templates)
 
+REDIS = Redis(
+    host='<endereço ip ou host>',
+    port=17639,
+    password='<senha>'
+)
+
 
 @app.get('/', response_class=HTMLResponse)
 async def get_index(
         request: Request
 ):
-    dados = [
-        {'id': 1, 'nome': 'Mario', 'idade': 46},
-        {'id': 2, 'nome': 'Thiago', 'idade': 38},
-        {'id': 3, 'nome': 'Vitor', 'idade': 26},
-        {'id': 4, 'nome': 'Thayra', 'idade': 25},
-    ]
+    dados = []
+
+    cursor = 0
+    while True:
+        cursor, keys = await REDIS.scan(cursor, 'GRUPO0:ALUNOS:*', 1_000)
+        if keys:
+            for key in keys:
+                data = await REDIS.get(key)
+                dados.append(loads(data))
+
+        if not cursor:
+            break
+
+    dados = sorted(dados, key=lambda x: x['id'], reverse=False)
 
     return TEMPLATES.TemplateResponse(
         name='index.html',
@@ -34,7 +50,7 @@ async def get_index(
 async def delete_aluno(
         aluno_id: int = Query(),
 ):
-    print(f'DELETOU DO BANCO DE DADOS O ALUNO {aluno_id}')
+    await REDIS.delete(f'GRUPO0:ALUNOS:{aluno_id}')
 
 
 @app.get('/details', response_class=HTMLResponse)
